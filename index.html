@@ -26,7 +26,7 @@ body.dark{--bg:#09111f;--card:#111c2e;--text:#f8fafc;--muted:#9ca3af;--line:#253
 .nav{border:0;background:none;color:var(--muted);padding:9px 2px;font-size:11px}.nav.active{color:var(--accent);font-weight:800}.nav i{display:block;font-style:normal;font-size:20px;margin-bottom:2px}.page{display:none}.page.active{display:block}
 label{display:block;font-size:13px;font-weight:700;margin:12px 0 6px}input,select,textarea{width:100%;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:13px;padding:12px;font:inherit}textarea{min-height:76px;resize:vertical}
 .modal{position:fixed;inset:0;background:#0008;display:none;align-items:flex-end;justify-content:center;z-index:20}.modal.show{display:flex}.sheet{width:min(100%,560px);background:var(--bg);border-radius:26px 26px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom));max-height:90vh;overflow:auto}
-.sheethead{display:flex;justify-content:space-between;align-items:center}.sheethead h3{margin:0}.empty{text-align:center;color:var(--muted);padding:26px 10px}.month{padding:14px 0;border-bottom:1px solid var(--line)}.month:last-child{border:0}.monthline{display:flex;justify-content:space-between;gap:10px}.month small{color:var(--muted);display:block;margin-top:4px}.forecast{border:1px solid #bfdbfe;background:color-mix(in srgb,var(--card) 88%,#dbeafe);border-radius:18px;padding:15px;margin-top:12px}.forecast b{font-size:22px}.delete{border:0;background:none;color:var(--bad);font-size:12px;padding:5px 0}
+.sheethead{display:flex;justify-content:space-between;align-items:center}.sheethead h3{margin:0}.empty{text-align:center;color:var(--muted);padding:26px 10px}.month{padding:14px 0;border-bottom:1px solid var(--line)}.month:last-child{border:0}.monthline{display:flex;justify-content:space-between;gap:10px}.month small{color:var(--muted);display:block;margin-top:4px}.forecast{border:1px solid #bfdbfe;background:color-mix(in srgb,var(--card) 88%,#dbeafe);border-radius:18px;padding:15px;margin-top:12px}.forecast b{font-size:22px}.delete{border:0;background:none;color:var(--bad);font-size:12px;padding:5px 0}.rule{padding:13px 0;border-bottom:1px solid var(--line)}.rule:last-child{border:0}.rulehead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.rulevals{margin-top:5px;color:var(--muted);font-size:13px}
 </style></head>
 <body><div class="app">
 <div class="top"><h1>Ferie Tracker</h1><button class="iconbtn" onclick="toggleTheme()">◐</button></div>
@@ -39,12 +39,15 @@ label{display:block;font-size:13px;font-weight:700;margin:12px 0 6px}input,selec
 <section id="history" class="page"><div class="section" style="margin-top:0"><h2>Storico e pianificate</h2><div class="card" id="historyList"></div></div></section>
 <section id="settings" class="page"><div class="section" style="margin-top:0"><h2>Impostazioni</h2><div class="card">
 <label>Saldo iniziale (ore)</label><input id="initial" type="number" step="0.01">
-<label>Ore maturate al mese</label><input id="vacMonth" type="number" step="0.01">
-<label>ROL maturati al mese</label><input id="rolMonth" type="number" step="0.01">
 <label>Ore per giornata lavorativa</label><input id="hoursDay" type="number" step="0.25">
 <label>Data di inizio conteggio</label><input id="startDate" type="date">
 <label>Orizzonte previsione</label><select id="forecastMonths"><option value="12">12 mesi</option><option value="18">18 mesi</option><option value="24">24 mesi</option><option value="36">36 mesi</option><option value="48">48 mesi</option><option value="60">60 mesi</option></select>
 <div style="height:12px"></div><button class="btn" onclick="saveSettings()">Salva impostazioni</button></div></div>
+<div class="section"><h2>Regole di maturazione</h2>
+<p class="muted">Ogni regola vale dalla data indicata fino all'inizio della regola successiva. In questo modo una variazione futura non modifica i mesi passati.</p>
+<div class="card" id="rulesList"></div>
+<div style="height:10px"></div><button class="btn secondary" onclick="openRule()">＋ Nuova regola</button>
+</div>
 <div class="section"><h2>Dati e backup</h2><div class="actions"><button class="btn secondary" onclick="exportData()">Esporta backup</button><label class="btn secondary" style="margin:0;text-align:center;cursor:pointer">Importa backup<input type="file" accept="application/json" onchange="importData(event)" hidden></label></div><div style="height:10px"></div><button class="btn danger" onclick="resetAll()">Azzera tutti i dati</button><p class="muted">I dati restano salvati su questo dispositivo.</p></div></section>
 </div>
 <nav class="bottom"><button class="nav active" data-page="home" onclick="go(this)"><i>⌂</i>Home</button><button class="nav" data-page="months" onclick="go(this)"><i>▦</i>Previsione</button><button class="nav" data-page="history" onclick="go(this)"><i>↻</i>Storico</button><button class="nav" data-page="settings" onclick="go(this)"><i>⚙</i>Impostazioni</button></nav>
@@ -54,32 +57,62 @@ label{display:block;font-size:13px;font-weight:700;margin:12px 0 6px}input,selec
 <div id="permitFields" style="display:none"><label>Data</label><input id="mDate" type="date"><label>Ore</label><input id="mHours" type="number" min="0.25" step="0.25" placeholder="es. 2"><label>Categoria</label><select id="mCat"><option>ROL</option><option>Permesso</option><option>Altro</option></select></div>
 <div id="adjustFields" style="display:none"><label>Rettifica</label><select id="mAdjustType"><option value="credit">Aggiungi ore</option><option value="debit">Sottrai ore</option></select><label>Data</label><input id="mAdjustDate" type="date"><label>Ore</label><input id="mAdjustHours" type="number" min="0.01" step="0.25" placeholder="es. 8"></div>
 <label>Nota</label><textarea id="mNote" placeholder="Facoltativa"></textarea><div style="height:12px"></div><button class="btn" onclick="saveMove()">Salva</button></div></div>
+<div class="modal" id="ruleModal"><div class="sheet"><div class="sheethead"><h3 id="ruleTitle">Nuova regola</h3><button class="iconbtn" onclick="closeRule()">✕</button></div>
+<input id="ruleId" type="hidden">
+<label>Valida dal</label><input id="ruleFrom" type="date">
+<label>Ore ferie maturate al mese</label><input id="ruleVac" type="number" min="0" step="0.00001" placeholder="es. 14,41666">
+<label>Ore ROL maturate al mese</label><input id="ruleRol" type="number" min="0" step="0.00001" placeholder="es. 5,66667">
+<div style="height:12px"></div><button class="btn" onclick="saveRule()">Salva regola</button></div></div>
 <script>
 const KEY='ferieTracker_v1', now=new Date();
 const isoLocal=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-const defaults={settings:{initial:0,vacMonth:14.41666,rolMonth:0,hoursDay:8,startDate:isoLocal(now),forecastMonths:24},moves:[],theme:'light'};
+const defaults={settings:{initial:0,hoursDay:8,startDate:isoLocal(now),forecastMonths:24},rules:[],moves:[],theme:'light'};
 let data=load();
-function load(){try{let x=JSON.parse(localStorage.getItem(KEY)||'{}');return {...defaults,...x,settings:{...defaults.settings,...(x.settings||{})}}}catch{return structuredClone(defaults)}}
+function load(){try{
+ let x=JSON.parse(localStorage.getItem(KEY)||'{}');
+ let merged={...defaults,...x,settings:{...defaults.settings,...(x.settings||{})}};
+ if(!Array.isArray(merged.rules)||!merged.rules.length){
+   const oldVac=+(x.settings?.vacMonth ?? 14.41666), oldRol=+(x.settings?.rolMonth ?? 0);
+   merged.rules=[{id:'base',from:merged.settings.startDate,vac:oldVac,rol:oldRol}];
+ }
+ merged.rules.sort((a,b)=>a.from.localeCompare(b.from));
+ return merged;
+}catch{return structuredClone(defaults)}}
 function persist(){localStorage.setItem(KEY,JSON.stringify(data));render()}
 function monthStart(d){return new Date(d.getFullYear(),d.getMonth(),1)}
 function addMonths(d,n){return new Date(d.getFullYear(),d.getMonth()+n,1)}
 function monthKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`}
-function monthlyEarn(){return +data.settings.vacMonth + +data.settings.rolMonth}
+function ruleForDate(d){
+ const key=isoLocal(d); let found=null;
+ for(const r of [...data.rules].sort((a,b)=>a.from.localeCompare(b.from))){if(r.from<=key)found=r;else break}
+ return found;
+}
+function monthlyEarn(d){let r=ruleForDate(d);return r?(+r.vac + +r.rol):0}
 function signed(m){return m.type==='credit'?+m.hours:-Math.abs(+m.hours)}
 function fmt(n){return Number(n||0).toLocaleString('it-IT',{maximumFractionDigits:2})}
 function monthsThrough(target){let s=monthStart(new Date(data.settings.startDate+'T00:00:00')), t=monthStart(target);if(t<s)return 0;return (t.getFullYear()-s.getFullYear())*12+t.getMonth()-s.getMonth()+1}
 function movesThrough(target){let end=new Date(target.getFullYear(),target.getMonth()+1,0,23,59,59);return data.moves.filter(m=>new Date(m.date+'T00:00:00')<=end).reduce((a,m)=>a+signed(m),0)}
-function projectedBalance(target){return +data.settings.initial + monthsThrough(target)*monthlyEarn() + movesThrough(target)}
+function earnedThrough(target){
+ let s=monthStart(new Date(data.settings.startDate+'T00:00:00')), t=monthStart(target), total=0;
+ if(t<s)return 0;
+ for(let d=new Date(s);d<=t;d=addMonths(d,1)) total+=monthlyEarn(d);
+ return total;
+}
+function projectedBalance(target){return +data.settings.initial + earnedThrough(target) + movesThrough(target)}
 function actualBalance(){return projectedBalance(now)}
 function currentYearMoves(){return data.moves.filter(m=>new Date(m.date+'T00:00:00').getFullYear()===now.getFullYear())}
-function earnedCurrentYear(){let s=new Date(data.settings.startDate+'T00:00:00'), start=Math.max(0,s.getFullYear()===now.getFullYear()?s.getMonth():0);return Math.max(0,now.getMonth()-start+1)*monthlyEarn()}
+function earnedCurrentYear(){
+ let s=monthStart(new Date(data.settings.startDate+'T00:00:00')), yStart=new Date(now.getFullYear(),0,1), from=s>yStart?s:yStart, total=0;
+ for(let d=new Date(from);d<=monthStart(now);d=addMonths(d,1)) total+=monthlyEarn(d);
+ return total;
+}
 function render(){
  document.body.classList.toggle('dark',data.theme==='dark');
  balance.textContent=fmt(actualBalance()); days.textContent=fmt(actualBalance()/(+data.settings.hoursDay||8));
  earnedY.textContent=fmt(earnedCurrentYear())+' h';
  usedY.textContent=fmt(currentYearMoves().filter(x=>signed(x)<0 && new Date(x.date+'T00:00:00')<=now).reduce((a,x)=>a+Math.abs(signed(x)),0))+' h';
- ['initial','vacMonth','rolMonth','hoursDay','startDate','forecastMonths'].forEach(id=>document.getElementById(id).value=data.settings[id]);
- renderMoves();renderMonths();
+ ['initial','hoursDay','startDate','forecastMonths'].forEach(id=>document.getElementById(id).value=data.settings[id]);
+ renderMoves();renderMonths();renderRules();
 }
 function moveHTML(m,del=false){let sign=signed(m),d1=new Date(m.date+'T00:00:00'),future=d1>now,dateText=d1.toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
  if(m.endDate&&m.endDate!==m.date){let d2=new Date(m.endDate+'T00:00:00');dateText=d1.toLocaleDateString('it-IT',{day:'2-digit',month:'short'})+' → '+d2.toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'})}
@@ -91,7 +124,7 @@ function renderMonths(){
  let start=monthStart(new Date(data.settings.startDate+'T00:00:00')), horizon=+data.settings.forecastMonths||24, end=addMonths(monthStart(now),horizon),out=[];
  for(let d=new Date(start);d<=end;d=addMonths(d,1)){
    let key=monthKey(d), ms=data.moves.filter(m=>m.date.startsWith(key)), used=Math.abs(ms.filter(m=>signed(m)<0).reduce((a,m)=>a+signed(m),0)), bal=projectedBalance(d), isFuture=d>monthStart(now), balDays=bal/(+data.settings.hoursDay||8);
-   out.push(`<div class="month"><div class="monthline"><b>${d.toLocaleDateString('it-IT',{month:'long',year:'numeric'})}${isFuture?' <span class="pill">PREVISIONE</span>':''}</b><div style="text-align:right"><b>${fmt(bal)} h</b><small>≈ ${fmt(balDays)} gg</small></div></div><small>+${fmt(monthlyEarn())} maturate · ${fmt(used)} utilizzate/pianificate</small></div>`)
+   out.push(`<div class="month"><div class="monthline"><b>${d.toLocaleDateString('it-IT',{month:'long',year:'numeric'})}${isFuture?' <span class="pill">PREVISIONE</span>':''}</b><div style="text-align:right" class="${bal<0?'neg':''}"><b>${fmt(bal)} h</b><small style="${bal<0?'color:var(--bad)':''}">≈ ${fmt(balDays)} gg</small></div></div><small>+${fmt(monthlyEarn(d))} maturate · ${fmt(used)} utilizzate/pianificate</small></div>`)
  } monthList.innerHTML=out.join('');
 }
 function go(b){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.nav').forEach(x=>x.classList.remove('active'));document.getElementById(b.dataset.page).classList.add('active');b.classList.add('active')}
@@ -108,11 +141,42 @@ function saveMove(){let mode=mMode.value,id=crypto.randomUUID?crypto.randomUUID(
  else{let h=+mAdjustHours.value;if(!h||h<=0)return alert('Inserisci ore valide.');data.moves.push({id,type:mAdjustType.value,date:mAdjustDate.value||isoLocal(now),hours:h,category:'Rettifica',note})}
  persist();closeMove()}
 function deleteMove(id){if(confirm('Eliminare questa assenza/previsione?')){data.moves=data.moves.filter(m=>m.id!==id);persist()}}
-function saveSettings(){data.settings={initial:+initial.value||0,vacMonth:+vacMonth.value||0,rolMonth:+rolMonth.value||0,hoursDay:+hoursDay.value||8,startDate:startDate.value||isoLocal(now),forecastMonths:+forecastMonths.value||24};persist();alert('Impostazioni salvate.')}
+function saveSettings(){
+ data.settings={...data.settings,initial:+initial.value||0,hoursDay:+hoursDay.value||8,startDate:startDate.value||isoLocal(now),forecastMonths:+forecastMonths.value||24};
+ persist();alert('Impostazioni salvate.');
+}
+function renderRules(){
+ let arr=[...data.rules].sort((a,b)=>a.from.localeCompare(b.from));
+ rulesList.innerHTML=arr.length?arr.map((r,i)=>{
+   let from=new Date(r.from+'T00:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
+   return `<div class="rule"><div class="rulehead"><div><b>Dal ${from}</b><div class="rulevals">Ferie ${fmt(r.vac)} h/mese · ROL ${fmt(r.rol)} h/mese · Totale ${fmt(+r.vac + +r.rol)} h/mese</div></div><div style="text-align:right"><button class="delete" onclick="editRule('${r.id}')">Modifica</button>${arr.length>1?`<br><button class="delete" onclick="deleteRule('${r.id}')">Elimina</button>`:''}</div></div></div>`
+ }).join(''):'<div class="empty">Nessuna regola configurata.</div>';
+}
+function openRule(id=''){
+ ruleId.value=id; ruleTitle.textContent=id?'Modifica regola':'Nuova regola';
+ if(id){let r=data.rules.find(x=>x.id===id);if(!r)return;ruleFrom.value=r.from;ruleVac.value=r.vac;ruleRol.value=r.rol}
+ else{ruleFrom.value=isoLocal(now);let r=ruleForDate(now);ruleVac.value=r?r.vac:'';ruleRol.value=r?r.rol:''}
+ ruleModal.classList.add('show');
+}
+function closeRule(){ruleModal.classList.remove('show')}
+function editRule(id){openRule(id)}
+function saveRule(){
+ let from=ruleFrom.value,vac=+ruleVac.value||0,rol=+ruleRol.value||0,id=ruleId.value;
+ if(!from)return alert('Inserisci la data di validità.');
+ let duplicate=data.rules.find(r=>r.from===from && r.id!==id);
+ if(duplicate)return alert('Esiste già una regola con questa data di validità.');
+ if(id){let r=data.rules.find(x=>x.id===id);if(r){r.from=from;r.vac=vac;r.rol=rol}}
+ else data.rules.push({id:crypto.randomUUID?crypto.randomUUID():Date.now().toString(),from,vac,rol});
+ data.rules.sort((a,b)=>a.from.localeCompare(b.from));persist();closeRule();
+}
+function deleteRule(id){
+ if(data.rules.length<=1)return alert('Deve rimanere almeno una regola.');
+ if(confirm('Eliminare questa regola? I mesi interessati useranno la regola precedente disponibile.')){data.rules=data.rules.filter(r=>r.id!==id);persist()}
+}
 function toggleTheme(){data.theme=data.theme==='dark'?'light':'dark';persist()}
 function exportData(){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.download='ferie-tracker-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function importData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);data={...defaults,...x,settings:{...defaults.settings,...(x.settings||{})}};persist();alert('Backup ripristinato.')}catch{alert('Backup non valido.')}};r.readAsText(f)}
-function resetAll(){if(confirm('Vuoi davvero cancellare tutti i dati?')){data=structuredClone(defaults);data.settings.startDate=isoLocal(now);persist()}}
+function resetAll(){if(confirm('Vuoi davvero cancellare tutti i dati?')){data=structuredClone(defaults);data.settings.startDate=isoLocal(now);data.rules=[{id:'base',from:data.settings.startDate,vac:14.41666,rol:0}];persist()}}
 function esc(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 render();
 if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{});
