@@ -1,5 +1,5 @@
-const CACHE='ferie-tracker-v7';
-const STATIC=['./manifest.webmanifest','./icon-192.png','./icon-512.png'];
+const CACHE='ferie-tracker-v8';
+const STATIC=['./manifest.webmanifest','./ferie-icon-192-v2.png','./ferie-icon-512-v2.png'];
 
 self.addEventListener('install', event => {
   self.skipWaiting();
