@@ -33,8 +33,7 @@ label{display:block;font-size:13px;font-weight:700;margin:12px 0 6px}input,selec
 <section id="home" class="page active">
 <div class="hero"><div class="label">Disponibilità attuale</div><div class="big"><span id="balance">0</span> h</div><div class="sub">≈ <span id="days">0</span> giorni lavorativi</div></div>
 <div class="grid"><div class="card metric"><span>Maturate quest'anno</span><b id="earnedY">0 h</b></div><div class="card metric"><span>Utilizzate quest'anno</span><b id="usedY">0 h</b></div></div>
-<div class="forecast"><div class="muted">Saldo previsto tra <span id="homeHorizonLabel">24</span> mesi</div><b><span id="futureBalance">0</span> h</b><div class="muted">≈ <span id="futureDays">0</span> giorni, incluse le ferie pianificate</div></div>
-<div style="height:12px"></div><button class="btn" onclick="openMove()">＋ Aggiungi assenza</button>
+<button class="btn" onclick="openMove()">＋ Aggiungi assenza</button>
 <div class="section"><h2>Ultimi movimenti</h2><div class="card" id="recent"></div></div></section>
 <section id="months" class="page"><div class="section" style="margin-top:0"><h2>Prospetto previsionale</h2><p class="muted">Ogni mese include anche le ore che maturerai in futuro. Le ferie pianificate vengono sottratte dal mese in cui iniziano.</p><div class="card" id="monthList"></div></div></section>
 <section id="history" class="page"><div class="section" style="margin-top:0"><h2>Storico e pianificate</h2><div class="card" id="historyList"></div></div></section>
@@ -80,20 +79,19 @@ function render(){
  earnedY.textContent=fmt(earnedCurrentYear())+' h';
  usedY.textContent=fmt(currentYearMoves().filter(x=>signed(x)<0 && new Date(x.date+'T00:00:00')<=now).reduce((a,x)=>a+Math.abs(signed(x)),0))+' h';
  ['initial','vacMonth','rolMonth','hoursDay','startDate','forecastMonths'].forEach(id=>document.getElementById(id).value=data.settings[id]);
- let horizon=+data.settings.forecastMonths||24, target=addMonths(monthStart(now),horizon);
- homeHorizonLabel.textContent=horizon; futureBalance.textContent=fmt(projectedBalance(target));futureDays.textContent=fmt(projectedBalance(target)/(+data.settings.hoursDay||8));
  renderMoves();renderMonths();
 }
 function moveHTML(m,del=false){let sign=signed(m),d1=new Date(m.date+'T00:00:00'),future=d1>now,dateText=d1.toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
  if(m.endDate&&m.endDate!==m.date){let d2=new Date(m.endDate+'T00:00:00');dateText=d1.toLocaleDateString('it-IT',{day:'2-digit',month:'short'})+' → '+d2.toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'})}
  let extra=m.workDays?` · ${m.workDays} ${m.workDays===1?'giorno':'giorni'}`:'';
- return `<div class="row"><div><b>${m.category}${future?'<span class="pill future">PIANIFICATA</span>':''}</b><div class="muted">${dateText}${extra}${m.note?' · '+esc(m.note):''}</div></div><div style="text-align:right"><b class="${sign>=0?'pos':'neg'}">${sign>=0?'+':''}${fmt(sign)} h</b>${del?`<div><button class="delete" onclick="deleteMove('${m.id}')">Elimina</button></div>`:''}</div></div>`}
+ let status=(m.type==='used')?(future?'<span class="pill future">PIANIFICATA</span>':'<span class="pill">EFFETTIVA</span>'):'';
+ return `<div class="row"><div><b>${m.category}${status}</b><div class="muted">${dateText}${extra}${m.note?' · '+esc(m.note):''}</div></div><div style="text-align:right"><b class="${sign>=0?'pos':'neg'}">${sign>=0?'+':''}${fmt(sign)} h</b>${del?`<div><button class="delete" onclick="deleteMove('${m.id}')">Elimina</button></div>`:''}</div></div>`}
 function renderMoves(){let arr=[...data.moves].sort((a,b)=>b.date.localeCompare(a.date));recent.innerHTML=arr.length?arr.slice(0,4).map(m=>moveHTML(m)).join(''):'<div class="empty">Nessun movimento ancora.</div>';historyList.innerHTML=arr.length?arr.map(m=>moveHTML(m,true)).join(''):'<div class="empty">Lo storico comparirà qui.</div>'}
 function renderMonths(){
  let start=monthStart(new Date(data.settings.startDate+'T00:00:00')), horizon=+data.settings.forecastMonths||24, end=addMonths(monthStart(now),horizon),out=[];
  for(let d=new Date(start);d<=end;d=addMonths(d,1)){
-   let key=monthKey(d), ms=data.moves.filter(m=>m.date.startsWith(key)), used=Math.abs(ms.filter(m=>signed(m)<0).reduce((a,m)=>a+signed(m),0)), bal=projectedBalance(d), isFuture=d>monthStart(now);
-   out.push(`<div class="month"><div class="monthline"><b>${d.toLocaleDateString('it-IT',{month:'long',year:'numeric'})}${isFuture?' <span class="pill">PREVISIONE</span>':''}</b><b>${fmt(bal)} h</b></div><small>+${fmt(monthlyEarn())} maturate · ${fmt(used)} utilizzate/pianificate</small></div>`)
+   let key=monthKey(d), ms=data.moves.filter(m=>m.date.startsWith(key)), used=Math.abs(ms.filter(m=>signed(m)<0).reduce((a,m)=>a+signed(m),0)), bal=projectedBalance(d), isFuture=d>monthStart(now), balDays=bal/(+data.settings.hoursDay||8);
+   out.push(`<div class="month"><div class="monthline"><b>${d.toLocaleDateString('it-IT',{month:'long',year:'numeric'})}${isFuture?' <span class="pill">PREVISIONE</span>':''}</b><div style="text-align:right"><b>${fmt(bal)} h</b><small>≈ ${fmt(balDays)} gg</small></div></div><small>+${fmt(monthlyEarn())} maturate · ${fmt(used)} utilizzate/pianificate</small></div>`)
  } monthList.innerHTML=out.join('');
 }
 function go(b){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.nav').forEach(x=>x.classList.remove('active'));document.getElementById(b.dataset.page).classList.add('active');b.classList.add('active')}
