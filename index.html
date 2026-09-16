@@ -18,7 +18,7 @@ body.dark{--bg:#09111f;--card:#111c2e;--text:#f8fafc;--muted:#9ca3af;--line:#253
 .hero{background:linear-gradient(135deg,#1d4ed8,#2563eb 55%,#4f46e5);color:white;border-radius:24px;padding:22px;box-shadow:0 16px 38px #2563eb35}
 .hero .label{opacity:.82;font-size:13px}.hero .big{font-size:40px;font-weight:800;letter-spacing:-1px;margin:4px 0}.hero .sub{opacity:.9}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;box-shadow:var(--shadow)}
-.metric b{font-size:22px;display:block;margin-top:5px}.balances{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}.balanceCard{padding:12px;border-radius:17px;background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow)}.balanceCard span{display:block;color:var(--muted);font-size:11px}.balanceCard b{display:block;font-size:18px;margin-top:4px}.monthBalances{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:9px}.miniBal{background:color-mix(in srgb,var(--card) 92%,var(--accent));border:1px solid var(--line);border-radius:12px;padding:8px}.miniBal span{display:block;color:var(--muted);font-size:10px}.miniBal b{display:block;font-size:14px;margin-top:2px}.metric span,.muted{color:var(--muted);font-size:13px}.section{margin-top:22px}.section h2{font-size:17px;margin:0 0 10px}
+.metric b{font-size:22px;display:block;margin-top:5px}.balances{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}.balanceCard{padding:11px 12px;border-radius:15px;background:#ffffff14;border:1px solid #ffffff24}.balanceCard span{display:block;color:#ffffffb8;font-size:10px;font-weight:700;letter-spacing:.35px}.balanceCard b{display:block;font-size:17px;margin-top:3px;color:white}.monthBalances{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:9px}.miniBal{background:color-mix(in srgb,var(--card) 92%,var(--accent));border:1px solid var(--line);border-radius:12px;padding:8px}.miniBal span{display:block;color:var(--muted);font-size:10px}.miniBal b{display:block;font-size:14px;margin-top:2px}.metric span,.muted{color:var(--muted);font-size:13px}.section{margin-top:22px}.section h2{font-size:17px;margin:0 0 10px}
 .btn{width:100%;border:0;border-radius:16px;padding:14px 16px;font-weight:750;font-size:15px;background:var(--accent);color:white}.btn.secondary{background:var(--card);color:var(--text);border:1px solid var(--line)}
 .btn.danger{background:#fee2e2;color:#991b1b}.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.row{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line)}.row:last-child{border:0}
 .pill{font-size:11px;padding:4px 7px;border-radius:999px;background:#dbeafe;color:#1d4ed8;margin-left:5px}.pill.future{background:#fef3c7;color:#92400e}.neg{color:var(--bad)}.pos{color:var(--good)}
@@ -31,22 +31,30 @@ label{display:block;font-size:13px;font-weight:700;margin:12px 0 6px}input,selec
 <body><div class="app">
 <div class="top"><h1>Ferie Tracker</h1><button class="iconbtn" onclick="toggleTheme()">◐</button></div>
 <section id="home" class="page active">
-<div class="hero"><div class="label">Disponibilità totale attuale</div><div class="big"><span id="balance">0</span> h</div><div class="sub">≈ <span id="days">0</span> giorni lavorativi complessivi</div></div>
-<div class="balances">
- <div class="balanceCard"><span>FERIE</span><b id="vacBalance">0 h</b></div>
- <div class="balanceCard"><span>ROL</span><b id="rolBalance">0 h</b></div>
- <div class="balanceCard"><span>TOTALE</span><b id="totalBalance">0 h</b></div>
+<div class="hero">
+ <div class="label">Disponibilità attuale</div>
+ <div class="balances">
+  <div class="balanceCard"><span>FERIE</span><b id="vacBalance">0 h</b></div>
+  <div class="balanceCard"><span>ROL</span><b id="rolBalance">0 h</b></div>
+  <div class="balanceCard"><span>TOTALE</span><b id="totalBalance">0 h</b></div>
+ </div>
 </div>
-<div class="grid"><div class="card metric"><span>Maturate quest'anno</span><b id="earnedY">0 h</b></div><div class="card metric"><span>Utilizzate quest'anno</span><b id="usedY">0 h</b></div></div>
-<button class="btn" onclick="openMove()">＋ Aggiungi assenza</button>
-<div class="section"><h2>Ultimi movimenti</h2><div class="card" id="recent"></div></div></section>
-<section id="months" class="page"><div class="section" style="margin-top:0"><h2>Prospetto previsionale</h2><p class="muted">Ogni mese mostra separatamente ferie, ROL e totale. Le assenze pianificate vengono sottratte dalla categoria scelta e dal totale.</p><div class="card" id="monthList"></div></div></section>
-<section id="history" class="page"><div class="section" style="margin-top:0"><h2>Storico e pianificate</h2><div class="card" id="historyList"></div></div></section>
-<section id="settings" class="page"><div class="section" style="margin-top:0"><h2>Impostazioni</h2><div class="card">
-<label>Saldo iniziale ferie (ore)</label><input id="initialVac" type="number" step="0.01"><label>Saldo iniziale ROL (ore)</label><input id="initialRol" type="number" step="0.01">
-<label>Ore per giornata lavorativa</label><input id="hoursDay" type="number" step="0.25">
-<label>Data di inizio conteggio</label><input id="startDate" type="date">
-<label>Orizzonte previsione</label><select id="forecastMonths"><option value="12">12 mesi</option><option value="18">18 mesi</option><option value="24">24 mesi</option><option value="36">36 mesi</option><option value="48">48 mesi</option><option value="60">60 mesi</option></select>
+<div class="hero" style="margin-top:12px;padding:16px 20px">
+ <div class="label">Maturate dalla data iniziale</div>
+ <div class="balances">
+  <div class="balanceCard"><span>FERIE</span><b id="earnedVac">0 h</b></div>
+  <div class="balanceCard"><span>ROL</span><b id="earnedRol">0 h</b></div>
+  <div class="balanceCard"><span>TOTALE</span><b id="earnedY">0 h</b></div>
+ </div>
+</div>
+<div class="hero" style="margin-top:12px;padding:16px 20px">
+ <div class="label">Utilizzate dalla data iniziale</div>
+ <div class="balances">
+  <div class="balanceCard"><span>FERIE</span><b id="usedVac">0 h</b></div>
+  <div class="balanceCard"><span>ROL</span><b id="usedRol">0 h</b></div>
+  <div class="balanceCard"><span>TOTALE</span><b id="usedY">0 h</b></div>
+ </div>
+</div>
 <div style="height:12px"></div><button class="btn" onclick="saveSettings()">Salva impostazioni</button></div></div>
 <div class="section"><h2>Regole di maturazione</h2>
 <p class="muted">Ogni regola vale dalla data indicata fino all'inizio della regola successiva. In questo modo una variazione futura non modifica i mesi passati.</p>
@@ -111,19 +119,28 @@ function earnedThrough(target,cat='total'){
 function initialFor(cat){if(cat==='Ferie')return +data.settings.initialVac||0;if(cat==='ROL')return +data.settings.initialRol||0;return (+data.settings.initialVac||0)+(+data.settings.initialRol||0)}
 function projectedBalance(target,cat='total'){return initialFor(cat)+earnedThrough(target,cat)+movesThrough(target,cat)}
 function actualBalance(cat='total'){return projectedBalance(now,cat)}
-function currentYearMoves(){return data.moves.filter(m=>new Date(m.date+'T00:00:00').getFullYear()===now.getFullYear())}
-function earnedCurrentYear(cat='total'){
- let s=monthStart(new Date(data.settings.startDate+'T00:00:00')), yStart=new Date(now.getFullYear(),0,1), from=s>yStart?s:yStart, total=0;
- for(let d=new Date(from);d<=monthStart(now);d=addMonths(d,1)) total+=monthlyEarn(d,cat);
+function movesSinceStart(cat='total'){
+ let start=new Date(data.settings.startDate+'T00:00:00');
+ return data.moves.filter(m=>{let d=new Date(m.date+'T00:00:00');return d>=start&&d<=now&&(cat==='total'||moveCategory(m)===cat)});
+}
+function earnedSinceStart(cat='total'){
+ let s=monthStart(new Date(data.settings.startDate+'T00:00:00')), total=0;
+ for(let d=new Date(s);d<=monthStart(now);d=addMonths(d,1)) total+=monthlyEarn(d,cat);
  return total;
+}
+function usedSinceStart(cat='total'){
+ return Math.abs(movesSinceStart(cat).filter(x=>signed(x)<0).reduce((a,x)=>a+signed(x),0));
 }
 function render(){
  document.body.classList.toggle('dark',data.theme==='dark');
- balance.textContent=fmt(actualBalance('total')); days.textContent=fmt(actualBalance('total')/(+data.settings.hoursDay||8));
  vacBalance.textContent=fmt(actualBalance('Ferie'))+' h'; rolBalance.textContent=fmt(actualBalance('ROL'))+' h'; totalBalance.textContent=fmt(actualBalance('total'))+' h';
  [vacBalance,rolBalance,totalBalance].forEach((el,i)=>{let v=[actualBalance('Ferie'),actualBalance('ROL'),actualBalance('total')][i];el.classList.toggle('neg',v<0)});
- earnedY.textContent=fmt(earnedCurrentYear())+' h';
- usedY.textContent=fmt(currentYearMoves().filter(x=>signed(x)<0 && new Date(x.date+'T00:00:00')<=now).reduce((a,x)=>a+Math.abs(signed(x)),0))+' h';
+ earnedVac.textContent=fmt(earnedSinceStart('Ferie'))+' h';
+ earnedRol.textContent=fmt(earnedSinceStart('ROL'))+' h';
+ earnedY.textContent=fmt(earnedSinceStart('total'))+' h';
+ usedVac.textContent=fmt(usedSinceStart('Ferie'))+' h';
+ usedRol.textContent=fmt(usedSinceStart('ROL'))+' h';
+ usedY.textContent=fmt(usedSinceStart('total'))+' h';
  ['initialVac','initialRol','hoursDay','startDate','forecastMonths'].forEach(id=>document.getElementById(id).value=data.settings[id]);
  renderMoves();renderMonths();renderRules();
 }
@@ -137,13 +154,10 @@ function renderMonths(){
  let start=monthStart(new Date(data.settings.startDate+'T00:00:00')), horizon=+data.settings.forecastMonths||24, end=addMonths(monthStart(now),horizon),out=[];
  for(let d=new Date(start);d<=end;d=addMonths(d,1)){
    let key=monthKey(d), ms=data.moves.filter(m=>m.date.startsWith(key)), isFuture=d>monthStart(now);
-   let vacUsed=Math.abs(ms.filter(m=>signed(m)<0&&moveCategory(m)==='Ferie').reduce((a,m)=>a+signed(m),0));
-   let rolUsed=Math.abs(ms.filter(m=>signed(m)<0&&moveCategory(m)==='ROL').reduce((a,m)=>a+signed(m),0));
    let vac=projectedBalance(d,'Ferie'), rol=projectedBalance(d,'ROL'), total=vac+rol, hd=(+data.settings.hoursDay||8);
    const box=(label,val)=>`<div class="miniBal ${val<0?'neg':''}"><span>${label}</span><b>${fmt(val)} h</b><span style="${val<0?'color:var(--bad)':''}">≈ ${fmt(val/hd)} gg</span></div>`;
    out.push(`<div class="month"><div class="monthline"><b>${d.toLocaleDateString('it-IT',{month:'long',year:'numeric'})}${isFuture?' <span class="pill">PREVISIONE</span>':''}</b></div>
-   <div class="monthBalances">${box('FERIE',vac)}${box('ROL',rol)}${box('TOTALE',total)}</div>
-   <small>+${fmt(monthlyEarn(d,'Ferie'))} ferie · +${fmt(monthlyEarn(d,'ROL'))} ROL · usate/pianificate: ${fmt(vacUsed)} ferie, ${fmt(rolUsed)} ROL</small></div>`)
+   <div class="monthBalances">${box('FERIE',vac)}${box('ROL',rol)}${box('TOTALE',total)}</div></div>`)
  } monthList.innerHTML=out.join('');
 }
 function go(b){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.nav').forEach(x=>x.classList.remove('active'));document.getElementById(b.dataset.page).classList.add('active');b.classList.add('active')}
