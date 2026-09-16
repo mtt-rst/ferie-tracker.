@@ -172,9 +172,8 @@ function saveMove(){
    if(n===0)return alert('Il periodo non contiene giorni lavorativi.');
    obj={id,type:'used',date:from,endDate:to,hours:n*(+data.settings.hoursDay||8),workDays:n,category:'Ferie',note};
  }else if(mode==='permit'){
-   let h=+mHours.value,maxH=+data.settings.hoursDay||8;
+   let h=+mHours.value;
    if(!h||h<=0)return alert('Inserisci ore valide.');
-   if(h>maxH)return alert(`Per una singola giornata puoi inserire al massimo ${fmt(maxH)} ore di ROL.`);
    obj={id,type:'used',date:mDate.value||isoLocal(now),hours:h,category:mCat.value,note};
  }else{
    let h=+mAdjustHours.value;
