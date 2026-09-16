@@ -1,1 +1,1 @@
-Ferie Tracker v12 - rebuilt from stable v9; navigation/pages preserved.
+Ferie Tracker v14 - modifica movimenti/assenze direttamente dallo Storico.

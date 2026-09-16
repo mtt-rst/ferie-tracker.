@@ -45,8 +45,6 @@ label{display:block;font-size:13px;font-weight:700;margin:12px 0 6px}input,selec
 <section id="home" class="page active">
 <div class="summaryCard availableCard"><div class="summaryTitle">Disponibilità attuale</div><div class="summaryGrid">
 <div class="summaryPart"><span>FERIE</span><b id="vacBalance">0 h</b></div><div class="summaryPart"><span>ROL</span><b id="rolBalance">0 h</b></div><div class="summaryPart"><span>TOTALE</span><b id="totalBalance">0 h</b></div></div></div>
-<div class="summaryCard earnedCard"><div class="summaryTitle">Maturate dalla data iniziale</div><div class="summaryGrid">
-<div class="summaryPart"><span>FERIE</span><b id="earnedVac">0 h</b></div><div class="summaryPart"><span>ROL</span><b id="earnedRol">0 h</b></div><div class="summaryPart"><span>TOTALE</span><b id="earnedY">0 h</b></div></div></div>
 <div class="summaryCard usedCard"><div class="summaryTitle">Utilizzate dalla data iniziale</div><div class="summaryGrid">
 <div class="summaryPart"><span>FERIE</span><b id="usedVac">0 h</b></div><div class="summaryPart"><span>ROL</span><b id="usedRol">0 h</b></div><div class="summaryPart"><span>TOTALE</span><b id="usedY">0 h</b></div></div></div>
 <button class="btn" onclick="openMove()">＋ Aggiungi assenza</button>
@@ -135,7 +133,6 @@ function render(){
  document.body.classList.toggle('dark',data.theme==='dark');
  vacBalance.textContent=fmt(actualBalance('Ferie'))+' h'; rolBalance.textContent=fmt(actualBalance('ROL'))+' h'; totalBalance.textContent=fmt(actualBalance('total'))+' h';
  [vacBalance,rolBalance,totalBalance].forEach((el,i)=>{let v=[actualBalance('Ferie'),actualBalance('ROL'),actualBalance('total')][i];el.parentElement.classList.toggle('neg',v<0)});
- earnedVac.textContent=fmt(earnedSinceStart('Ferie'))+' h'; earnedRol.textContent=fmt(earnedSinceStart('ROL'))+' h'; earnedY.textContent=fmt(earnedSinceStart('total'))+' h';
  usedVac.textContent=fmt(usedSinceStart('Ferie'))+' h'; usedRol.textContent=fmt(usedSinceStart('ROL'))+' h'; usedY.textContent=fmt(usedSinceStart('total'))+' h';
  ['initialVac','initialRol','hoursDay','startDate','forecastMonths'].forEach(id=>document.getElementById(id).value=data.settings[id]);
  renderMoves();renderMonths();renderRules();
@@ -144,7 +141,7 @@ function moveHTML(m,del=false){let sign=signed(m),d1=new Date(m.date+'T00:00:00'
  if(m.endDate&&m.endDate!==m.date){let d2=new Date(m.endDate+'T00:00:00');dateText=d1.toLocaleDateString('it-IT',{day:'2-digit',month:'short'})+' → '+d2.toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'})}
  let extra=m.workDays?` · ${m.workDays} ${m.workDays===1?'giorno':'giorni'}`:'';
  let status=(m.type==='used')?(future?'<span class="pill future">PIANIFICATA</span>':'<span class="pill">EFFETTIVA</span>'):'';
- return `<div class="row"><div><b>${m.category}${status}</b><div class="muted">${dateText}${extra}${m.note?' · '+esc(m.note):''}</div></div><div style="text-align:right"><b class="${sign>=0?'pos':'neg'}">${sign>=0?'+':''}${fmt(sign)} h</b>${del?`<div><button class="delete" onclick="deleteMove('${m.id}')">Elimina</button></div>`:''}</div></div>`}
+ return `<div class="row"><div><b>${m.category}${status}</b><div class="muted">${dateText}${extra}${m.note?' · '+esc(m.note):''}</div></div><div style="text-align:right"><b class="${sign>=0?'pos':'neg'}">${sign>=0?'+':''}${fmt(sign)} h</b>${del?`<div><button class="delete" onclick="editMove('${m.id}')">Modifica</button> · <button class="delete" onclick="deleteMove('${m.id}')">Elimina</button></div>`:''}</div></div>`}
 function renderMoves(){let arr=[...data.moves].sort((a,b)=>b.date.localeCompare(a.date));recent.innerHTML=arr.length?arr.slice(0,4).map(m=>moveHTML(m)).join(''):'<div class="empty">Nessun movimento ancora.</div>';historyList.innerHTML=arr.length?arr.map(m=>moveHTML(m,true)).join(''):'<div class="empty">Lo storico comparirà qui.</div>'}
 function renderMonths(){
  let start=monthStart(new Date(data.settings.startDate+'T00:00:00')), horizon=+data.settings.forecastMonths||24, end=addMonths(monthStart(now),horizon),out=[];
@@ -162,15 +159,46 @@ function go(b){document.querySelectorAll('.page').forEach(x=>x.classList.remove(
 function easterSunday(y){let a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),month=Math.floor((h+l-7*m+114)/31),day=((h+l-7*m+114)%31)+1;return new Date(y,month-1,day)}
 function holidaySet(y){let fixed=['01-01','01-06','04-25','05-01','06-02','08-15','11-01','12-08','12-25','12-26'].map(x=>`${y}-${x}`);let e=easterSunday(y);e.setDate(e.getDate()+1);fixed.push(isoLocal(e));return new Set(fixed)}
 function workdaysBetween(a,b){if(!a||!b)return 0;let s=new Date(a+'T00:00:00'),e=new Date(b+'T00:00:00');if(e<s)return -1,n=0;let n=0;for(let d=new Date(s);d<=e;d.setDate(d.getDate()+1)){let wd=d.getDay();if(wd!==0&&wd!==6&&!holidaySet(d.getFullYear()).has(isoLocal(d)))n++}return n}
-function openMove(){let t=isoLocal(now);mMode.value='vacation';mFrom.value=t;mTo.value=t;mDate.value=t;mAdjustDate.value=t;mHours.value='';mAdjustHours.value='';mNote.value='';updateMoveForm();moveModal.classList.add('show')}
-function closeMove(){moveModal.classList.remove('show')}
+let editingMoveId=null;
+function openMove(){editingMoveId=null;let t=isoLocal(now);mMode.disabled=false;mMode.value='vacation';mFrom.value=t;mTo.value=t;mDate.value=t;mAdjustDate.value=t;mHours.value='';mAdjustHours.value='';mNote.value='';updateMoveForm();moveModal.classList.add('show')}
+function closeMove(){editingMoveId=null;mMode.disabled=false;moveModal.classList.remove('show')}
 function updateMoveForm(){let mode=mMode.value;vacFields.style.display=mode==='vacation'?'block':'none';permitFields.style.display=mode==='permit'?'block':'none';adjustFields.style.display=mode==='adjust'?'block':'none';if(mode==='vacation')previewVacation()}
 function previewVacation(){let n=workdaysBetween(mFrom.value,mTo.value);if(n<0){vacPreview.textContent='La data finale deve essere successiva a quella iniziale';return}vacPreview.textContent=`${n} ${n===1?'giorno lavorativo':'giorni lavorativi'} → ${fmt(n*(+data.settings.hoursDay||8))} ore di ferie`}
-function saveMove(){let mode=mMode.value,id=crypto.randomUUID?crypto.randomUUID():Date.now().toString(),note=mNote.value.trim();
- if(mode==='vacation'){let from=mFrom.value,to=mTo.value,n=workdaysBetween(from,to);if(!from||!to||n<0)return alert('Controlla le date.');if(n===0)return alert('Il periodo non contiene giorni lavorativi.');data.moves.push({id,type:'used',date:from,endDate:to,hours:n*(+data.settings.hoursDay||8),workDays:n,category:'Ferie',note})}
- else if(mode==='permit'){let h=+mHours.value;if(!h||h<=0)return alert('Inserisci ore valide.');data.moves.push({id,type:'used',date:mDate.value||isoLocal(now),hours:h,category:mCat.value,note})}
- else{let h=+mAdjustHours.value;if(!h||h<=0)return alert('Inserisci ore valide.');data.moves.push({id,type:mAdjustType.value,date:mAdjustDate.value||isoLocal(now),hours:h,category:'Rettifica',balanceCategory:mAdjustCat.value,note})}
- persist();closeMove()}
+function saveMove(){
+ let mode=mMode.value,id=editingMoveId||(crypto.randomUUID?crypto.randomUUID():Date.now().toString()),note=mNote.value.trim(),obj;
+ if(mode==='vacation'){
+   let from=mFrom.value,to=mTo.value,n=workdaysBetween(from,to);
+   if(!from||!to||n<0)return alert('Controlla le date.');
+   if(n===0)return alert('Il periodo non contiene giorni lavorativi.');
+   obj={id,type:'used',date:from,endDate:to,hours:n*(+data.settings.hoursDay||8),workDays:n,category:'Ferie',note};
+ }else if(mode==='permit'){
+   let h=+mHours.value,maxH=+data.settings.hoursDay||8;
+   if(!h||h<=0)return alert('Inserisci ore valide.');
+   if(h>maxH)return alert(`Per una singola giornata puoi inserire al massimo ${fmt(maxH)} ore di ROL.`);
+   obj={id,type:'used',date:mDate.value||isoLocal(now),hours:h,category:mCat.value,note};
+ }else{
+   let h=+mAdjustHours.value;
+   if(!h||h<=0)return alert('Inserisci ore valide.');
+   obj={id,type:mAdjustType.value,date:mAdjustDate.value||isoLocal(now),hours:h,category:'Rettifica',balanceCategory:mAdjustCat.value,note};
+ }
+ if(editingMoveId){
+   let idx=data.moves.findIndex(m=>m.id===editingMoveId);
+   if(idx>=0)data.moves[idx]=obj;
+ }else data.moves.push(obj);
+ persist();closeMove();
+}
+function editMove(id){
+ let m=data.moves.find(x=>x.id===id);if(!m)return;
+ editingMoveId=id;mNote.value=m.note||'';
+ if(m.category==='Ferie'&&m.type==='used'){
+   mMode.value='vacation';mFrom.value=m.date;mTo.value=m.endDate||m.date;
+ }else if(m.type==='used'){
+   mMode.value='permit';mDate.value=m.date;mHours.value=m.hours;mCat.value='ROL';
+ }else{
+   mMode.value='adjust';mAdjustDate.value=m.date;mAdjustHours.value=m.hours;mAdjustType.value=m.type;mAdjustCat.value=m.balanceCategory||moveCategory(m);
+ }
+ mMode.disabled=true;updateMoveForm();moveModal.classList.add('show');
+}
 function deleteMove(id){if(confirm('Eliminare questa assenza/previsione?')){data.moves=data.moves.filter(m=>m.id!==id);persist()}}
 function saveSettings(){
  data.settings={...data.settings,initialVac:+initialVac.value||0,initialRol:+initialRol.value||0,hoursDay:+hoursDay.value||8,startDate:startDate.value||isoLocal(now),forecastMonths:+forecastMonths.value||24};
