@@ -1,4 +1,4 @@
-const CACHE='ferie-tracker-v11';
+const CACHE='ferie-tracker-v12';
 const STATIC=['./manifest.webmanifest','./ferie-icon-192-v2.png','./ferie-icon-512-v2.png'];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(STATIC)))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});

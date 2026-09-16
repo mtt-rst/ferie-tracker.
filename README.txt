@@ -1,1 +1,1 @@
-Ferie Tracker v11 - rimossa descrizione superflua dalla pagina Previsione.
+Ferie Tracker v12 - rebuilt from stable v9; navigation/pages preserved.
